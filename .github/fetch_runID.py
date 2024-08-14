@@ -18,8 +18,8 @@ if __name__ == '__main__':
         For e-mission-server: id = 35580278 
     '''
     
-    # download_url = "https://api.github.com/repos/e-mission/e-mission-server/actions/workflows/35580278/runs"
     download_url = "https://api.github.com/repos/MukuFlash03/e-mission-server/actions/workflows/75506902/runs"
+    # download_url = "https://api.github.com/repos/e-mission/e-mission-server/actions/workflows/35580278/runs"
     logging.debug("About to fetch workflow runs present in docker image workflow present in e-mission-server from %s" % download_url)
     r = requests.get(download_url)
     if r.status_code != 200:
