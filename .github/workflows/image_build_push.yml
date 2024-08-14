@@ -2,7 +2,11 @@ name: docker-image-push-public-dash
 
 on:
   push:
+<<<<<<< HEAD
     branches: [ image-push-2 ]
+=======
+    branches: [ main ]
+>>>>>>> main
     
   workflow_dispatch:
     inputs:
@@ -14,7 +18,11 @@ env:
   DOCKER_USER: ${{secrets.DOCKER_USER}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
 
+<<<<<<< HEAD
 jobs:  
+=======
+jobs:
+>>>>>>> main
   build:
     runs-on: ubuntu-latest
 
@@ -79,14 +87,22 @@ jobs:
     - name: rename docker images
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
+<<<<<<< HEAD
           docker image tag em-pub-dash/frontend:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+=======
+          docker image tag em-pub-dash/frontend:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_frontend:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+>>>>>>> main
         fi
         docker image tag em-pub-dash/viz-scripts:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
 
     - name: push docker images
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
+<<<<<<< HEAD
           docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+=======
+          docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}_frontend:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+>>>>>>> main
         fi
         docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
    
