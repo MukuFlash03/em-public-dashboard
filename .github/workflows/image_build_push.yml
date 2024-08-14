@@ -105,8 +105,8 @@ jobs:
           echo "Workflow_dispatch: New server image built and pushed, Updating image tag in .env"
           echo "SERVER_IMAGE_TAG=$DOCKER_TAG_FROM_WORKFLOW_DISPATCH" > .env
         # else
-        #   echo "Push event: Restoring latest server image tag in .env"
-        #   echo "SERVER_IMAGE_TAG=$DOCKER_TAG_FROM_PUSH" > .env
+          echo "Push event: Restoring latest server image tag in .env"
+          # echo "SERVER_IMAGE_TAG=$DOCKER_TAG_FROM_PUSH" > .env
         fi
 
     - name: Add, Commit, Push changes to .env file
@@ -143,12 +143,16 @@ jobs:
 
     - name: rename docker images
       run: |
-        docker image tag em-pub-dash-dev/frontend:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+        if [ "${{ github.event_name }}" == "push" ]; then
+          docker image tag em-pub-dash-dev/frontend:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+        fi
         docker image tag em-pub-dash-dev/viz-scripts:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
 
     - name: push docker images
       run: |
-        docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+        if [ "${{ github.event_name }}" == "push" ]; then
+          docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+        fi
         docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
    
     - name: Create a text file
