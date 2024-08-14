@@ -14,7 +14,7 @@ env:
   DOCKER_USER: ${{secrets.DOCKER_USER}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
 
-jobs:  
+jobs:
   build:
     runs-on: ubuntu-latest
 
@@ -23,7 +23,7 @@ jobs:
       
     steps:
     - uses: actions/checkout@v4
-
+    
     - name: Set docker image tag from .env file
       run: |
         set -a; source .env; set +a
@@ -79,9 +79,13 @@ jobs:
     - name: rename docker images
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
-          docker image tag em-pub-dash-prod/frontend:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_frontend:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+          docker image tag em-pub-dash/frontend:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_frontend:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+          echo "FRONTEND_TAG=${GITHUB_REF##*/}_${{ steps.date.outputs.date }}" >> $GITHUB_ENV
+        else
+          echo "FRONTEND_TAG=${{ env.DOCKER_TAG_FROM_PUSH }}" >> $GITHUB_ENV
         fi
-        docker image tag em-pub-dash-prod/viz-scripts:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+        docker image tag em-pub-dash/viz-scripts:latest $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
+        echo "NOTEBOOK_TAG=${GITHUB_REF##*/}_${{ steps.date.outputs.date }}" >> $GITHUB_ENV
 
     - name: push docker images
       run: |
@@ -89,15 +93,23 @@ jobs:
           docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}_frontend:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
         fi
         docker push $DOCKER_USER/${GITHUB_REPOSITORY#*/}_notebook:${GITHUB_REF##*/}_${{ steps.date.outputs.date }}
-   
-    - name: Create a text file
-      run: |
-          echo ${{ steps.date.outputs.date }} > public_dash_tag_file.txt
-          echo "Created tag text file"
 
-    - name: Upload Artifact
+    - name: Create tag files
+      run: |
+        echo ${{ env.FRONTEND_TAG }} > frontend_tag_file.txt
+        echo ${{ env.NOTEBOOK_TAG }} > notebook_tag_file.txt
+        echo "Created tag text files"
+
+    - name: Upload Frontend Tag Artifact
       uses: actions/upload-artifact@v4
       with:
-          name: public-dash-image-tag
-          path: public_dash_tag_file.txt
-          overwrite: true
+        name: frontend-image-tag
+        path: frontend_tag_file.txt
+        overwrite: true
+
+    - name: Upload Notebook Tag Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: notebook-image-tag
+        path: notebook_tag_file.txt
+        overwrite: true
