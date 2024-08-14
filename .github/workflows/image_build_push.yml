@@ -10,6 +10,7 @@ on:
         description: "Latest Docker image tags passed from e-mission-server repository on image build and push"
         required: true
 
+#Dockerhub credentials are set as environment variables 
 env:
   DOCKER_USER: ${{secrets.DOCKER_USER}}
   DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
