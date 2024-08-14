@@ -1,7 +1,7 @@
 # python 3
 
 ARG SERVER_IMAGE_TAG
-FROM mukuflash03/e-mission-server:master_${SERVER_IMAGE_TAG}
+FROM mukuflash03/e-mission-server:cicd-test_${SERVER_IMAGE_TAG}
 # FROM shankari/e-mission-server:master_${SERVER_IMAGE_TAG}
 
 ADD https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem /etc/ssl/certs/
