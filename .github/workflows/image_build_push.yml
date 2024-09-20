@@ -25,16 +25,16 @@ jobs:
       id: set-tags
       run: |
         set -a; source .env.tags; set +a
-        echo "NOTEBOOK_IMAGE_TAG=${NOTEBOOK_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
-        echo "FRONTEND_IMAGE_TAG=${FRONTEND_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+        echo "PUBLIC_DASH_NOTEBOOK_IMAGE_TAG=${PUBLIC_DASH_NOTEBOOK_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+        echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${PUBLIC_DASH_FRONTEND_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
         echo "DOCKER_TAG_FROM_PUSH=${SERVER_IMAGE_TAG}" >> "$GITHUB_OUTPUT"
         echo "DOCKER_TAG_FROM_WORKFLOW_DISPATCH=${{ github.event.inputs.docker_image_tag }}" >> "$GITHUB_OUTPUT"
 
     - name: Print input docker image tags
       run: |
         echo "Event name: ${{ github.event_name }}"
-        echo "Current notebook image tag (push): ${{ steps.set-tags.outputs.NOTEBOOK_IMAGE_TAG }}"
-        echo "Current frontend image tag (push): ${{ steps.set-tags.outputs.FRONTEND_IMAGE_TAG }}"
+        echo "Current notebook image tag (push): ${{ steps.set-tags.outputs.PUBLIC_DASH_NOTEBOOK_IMAGE_TAG }}"
+        echo "Current frontend image tag (push): ${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }}"
         echo "Latest docker image tag (push): ${{ steps.set-tags.outputs.DOCKER_TAG_FROM_PUSH }}"
         echo "Latest docker image tag (workflow_dispatch): ${{ steps.set-tags.outputs.DOCKER_TAG_FROM_WORKFLOW_DISPATCH }}"
 
@@ -74,14 +74,14 @@ jobs:
 
     - name: Update .env.tags file 
       run: |
-        echo "NOTEBOOK_IMAGE_TAG=${{ steps.date.outputs.date }}" > .env.tags
+        echo "PUBLIC_DASH_NOTEBOOK_IMAGE_TAG=${{ steps.date.outputs.date }}" > .env.tags
         if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
           echo "Workflow_dispatch: New server image built and pushed; update server image tag; reuse existing frontend image tag"
-          echo "FRONTEND_IMAGE_TAG=${{ steps.set-tags.outputs.FRONTEND_IMAGE_TAG }}" >> .env.tags
+          echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }}" >> .env.tags
           echo "SERVER_IMAGE_TAG=${{ steps.set-tags.outputs.DOCKER_TAG_FROM_WORKFLOW_DISPATCH }}" >> .env.tags
         else
           echo "Push event: Reuse existing server image tag"
-          echo "FRONTEND_IMAGE_TAG=${{ steps.date.outputs.date }}" >> .env.tags
+          echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${{ steps.date.outputs.date }}" >> .env.tags
           echo "SERVER_IMAGE_TAG=${{ steps.set-tags.outputs.DOCKER_TAG_FROM_PUSH }}" >> .env.tags
         fi
   
@@ -102,7 +102,7 @@ jobs:
         if [ "${{ github.event_name }}" == "push" ]; then
           echo ${{ steps.date.outputs.date }} > frontend_tag_file.txt
         else
-          echo ${{ steps.set-tags.outputs.FRONTEND_IMAGE_TAG }} > frontend_tag_file.txt
+          echo ${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }} > frontend_tag_file.txt
         fi
         echo ${{ steps.date.outputs.date }} > notebook_tag_file.txt
         echo "Created tag text files"
