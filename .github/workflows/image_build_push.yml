@@ -97,7 +97,7 @@ jobs:
         if [ "${{ github.event_name }}" == "push" ]; then
           echo ${{ steps.date.outputs.date }} > frontend_tag_file.txt
         else
-          echo ${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }} > frontend_tag_file.txt
+          echo ${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }} | cut -d'_' -f2 > frontend_tag_file.txt
         fi
         echo ${{ steps.date.outputs.date }} > notebook_tag_file.txt
         echo "Created tag text files"
