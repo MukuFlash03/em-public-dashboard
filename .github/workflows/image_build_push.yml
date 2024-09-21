@@ -95,11 +95,11 @@ jobs:
     - name: Create artifact text files
       run: |
         if [ "${{ github.event_name }}" == "push" ]; then
-          echo ${GITHUB_REF##*/}_${{ steps.date.outputs.date }} > frontend_tag_file.txt
+          echo ${{ steps.date.outputs.date }} > frontend_tag_file.txt
         else
           echo ${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }} > frontend_tag_file.txt
         fi
-        echo ${GITHUB_REF##*/}_${{ steps.date.outputs.date }} > notebook_tag_file.txt
+        echo ${{ steps.date.outputs.date }} > notebook_tag_file.txt
         echo "Created tag text files"
 
     - name: Upload Frontend Tag Artifact
