@@ -13,7 +13,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+      
     steps:
     - uses: actions/checkout@v4
 
@@ -72,14 +72,14 @@ jobs:
       run: |
         echo "PUBLIC_DASH_NOTEBOOK_IMAGE_TAG=${GITHUB_REF##*/}_${{ steps.date.outputs.date }}" > .env
         if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-        echo "Workflow_dispatch: Reuse existing frontend image tag"
-        echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }}" >> .env
+          echo "Workflow_dispatch: Reuse existing frontend image tag"
+          echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }}" >> .env
         else
-        echo "Push event: Update frontend image tag"
-        echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${GITHUB_REF##*/}_${{ steps.date.outputs.date }}" >> .env
+          echo "Push event: Update frontend image tag"
+          echo "PUBLIC_DASH_FRONTEND_IMAGE_TAG=${GITHUB_REF##*/}_${{ steps.date.outputs.date }}" >> .env
         fi
         echo "SERVER_IMAGE_TAG=${{ steps.get-server-tag.outputs.SERVER_IMAGE_TAG }}" >> .env
-
+  
     - name: Add, Commit, Push changes to .env file
       run: |
         git config --local user.email "action@github.com"
@@ -91,27 +91,3 @@ jobs:
           git commit -m "Updated docker image tags in .env file to the latest timestamp"
           git push origin 
         fi
-
-    - name: Create artifact text files
-      run: |
-        if [ "${{ github.event_name }}" == "push" ]; then
-          echo ${{ steps.date.outputs.date }} > frontend_tag_file.txt
-        else
-          echo ${{ steps.set-tags.outputs.PUBLIC_DASH_FRONTEND_IMAGE_TAG }} | cut -d'_' -f2 > frontend_tag_file.txt
-        fi
-        echo ${{ steps.date.outputs.date }} > notebook_tag_file.txt
-        echo "Created tag text files"
-
-    - name: Upload Frontend Tag Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: frontend-image-tag
-        path: frontend_tag_file.txt
-        overwrite: true
-  
-    - name: Upload Notebook Tag Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: notebook-image-tag
-        path: notebook_tag_file.txt
-        overwrite: true
