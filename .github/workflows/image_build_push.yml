@@ -8,6 +8,6 @@ jobs:
   build:  
     uses: MukuFlash03/e-mission-server/.github/workflows/reusable_image_build_push.yml@cleanup-cicd
     with:
-      repo: ${GITHUB_REPOSITORY#*/}
-      branch: ${GITHUB_REF##*/}
+      repo: ${{ github.event.repository.name }}
+      branch: ${{ github.ref_name }}
     secrets: inherit
