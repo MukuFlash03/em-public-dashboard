@@ -1,7 +1,7 @@
 name: docker-image-push-public-dash
 
 on:
-  push:
+  # push:
     # branches: [ main, cleanup-cicd ]
     # tags:
     #   - "v[0-9]+.[0-9]+.[0-9]+"
