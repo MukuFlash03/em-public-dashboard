@@ -27,9 +27,20 @@ COPY *.py .
 # RUN rm -rf /root/miniconda-26.1.1/envs/emission/lib/python3.11/site-packages/jupyterlab/tests
 # RUN rm -rf /root/miniconda-26.1.1/lib/python3.12/site-packages/jupyterlab/tests
 
+# These are from the conda cache
 RUN /bin/bash -c "find /root/miniconda-*/pkgs -wholename \*info/test\* -type d | xargs rm -rf"
 RUN /bin/bash -c "find /root/miniconda-*/pkgs -wholename \*staging\* -type d | xargs rm -rf"
 RUN /bin/bash -c "find /root/miniconda-*/pkgs -wholename \*tests\* -type d | xargs rm -rf"
+
+# These are from the installed versions
+RUN /bin/bash -c "find /root/miniconda-*/site-packages -wholename \*info/test\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/site-packages -wholename \*staging\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/site-packages -wholename \*tests\* -type d | xargs rm -rf"
+
+# And this is from our environment
+RUN /bin/bash -c "find /root/miniconda-*/envs/emission -wholename \*info/test\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/envs/emission -wholename \*staging\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/envs/emission -wholename \*tests\* -type d | xargs rm -rf"
 
 WORKDIR /usr/src/app
 
