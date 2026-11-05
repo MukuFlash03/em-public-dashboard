@@ -33,9 +33,9 @@ RUN /bin/bash -c "find /root/miniconda-*/pkgs -wholename \*staging\* -type d | x
 RUN /bin/bash -c "find /root/miniconda-*/pkgs -wholename \*tests\* -type d | xargs rm -rf"
 
 # These are from the installed versions
-RUN /bin/bash -c "find /root/miniconda-*/site-packages -wholename \*info/test\* -type d | xargs rm -rf"
-RUN /bin/bash -c "find /root/miniconda-*/site-packages -wholename \*staging\* -type d | xargs rm -rf"
-RUN /bin/bash -c "find /root/miniconda-*/site-packages -wholename \*tests\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/lib/python*/site-packages -wholename \*info/test\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/lib/python*/site-packages -wholename \*staging\* -type d | xargs rm -rf"
+RUN /bin/bash -c "find /root/miniconda-*/lib/python*/site-packages -wholename \*tests\* -type d | xargs rm -rf"
 
 # And this is from our environment
 RUN /bin/bash -c "find /root/miniconda-*/envs/emission -wholename \*info/test\* -type d | xargs rm -rf"
