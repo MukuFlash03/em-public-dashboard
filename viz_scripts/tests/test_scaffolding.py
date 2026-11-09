@@ -345,24 +345,27 @@ def test_translate_values_to_labels_english(dynamic_labels):
 @pytest.mark.skip(reason="Implementation limited only for english translations")
 def test_translate_values_to_labels_spanish(dynamic_labels, language="es"):
     # Call the function with our predefined labels
-    mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels)
+    mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels, language=language)
 
     expected_mode_translations_es = colls.defaultdict(lambda: 'Other', {
         "gas_car":"Coche de gasolina",
         "motorcycle":"Motocicleta",
-        "walk": "Caminando"
+        "walk": "Caminando",
+        "other": "Other"
     })
 
     expected_purpose_translations_es = colls.defaultdict(lambda: 'Other', {
         "home":"Casa",
         "shopping":"Compras",
-        "meal":"Comida"
+        "meal":"Comida",
+        "other": "Other"
     })
 
     expected_result_replaced_translations_es = colls.defaultdict(lambda: 'Other', {
         "no_travel":"No viajar",
         "bike":"Bicicleta",
-        "taxi": "Taxi"
+        "taxi": "Taxi",
+        "other": "Other"
     })
     assert mode_translations_es == expected_mode_translations_es
     assert purpose_translations_es == expected_purpose_translations_es
