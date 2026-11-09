@@ -143,8 +143,8 @@ def test_mapping_color_surveys():
 
 def test_mapping_color_surveys_empty():
     # Test with an empty dictionary
-    with pytest.raises(Exception):
-        mapping_color_surveys({})
+    with pytest.raises(UnboundLocalError):
+        scaffolding.mapping_color_surveys({})
 
 @pytest.fixture
 def before_df():
@@ -201,11 +201,11 @@ def test_get_quality_text_sensed_include_test_users(sensed_df):
     assert result == "Based on 8 trips from 5 testers and participants"
 
 def test_get_quality_text_numerator(sensed_df):
-    result = scaffolding.get_quality_text_sensed(sensed_df)
+    result = scaffolding.get_quality_text_numerator(sensed_df)
     assert result == "Based on 8 trips from 5 users"
 
 def test_get_quality_text_numerator_include_test_users(sensed_df):
-    result = scaffolding.get_quality_text_sensed(sensed_df, include_test_users=True)
+    result = scaffolding.get_quality_text_numerator(sensed_df, include_test_users=True)
     assert result == "Based on 8 trips from 5 testers and participants"
 
 def test_get_file_suffix():
