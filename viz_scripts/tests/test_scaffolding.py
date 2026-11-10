@@ -146,7 +146,7 @@ class TestMappingColorSurveys:
 
     def test_mapping_color_surveys_empty(self):
         # Test with an empty dictionary
-        with pytest.raises(Exception):
+        with pytest.raises(UnboundLocalError):
             scaffolding.mapping_color_surveys({})
 
 @pytest.fixture
@@ -208,11 +208,11 @@ class TestGetQualityTextSensed:
         assert result == "Based on 8 trips from 5 testers and participants"
 
     def test_get_quality_text_numerator(self, sensed_df):
-        result = scaffolding.get_quality_text_sensed(sensed_df)
+        result = scaffolding.get_quality_text_numerator(sensed_df)
         assert result == "Based on 8 trips from 5 users"
 
     def test_get_quality_text_numerator_include_test_users(self, sensed_df):
-        result = scaffolding.get_quality_text_sensed(sensed_df, include_test_users=True)
+        result = scaffolding.get_quality_text_numerator(sensed_df, include_test_users=True)
         assert result == "Based on 8 trips from 5 testers and participants"
 
 class TestGetFileSuffix:
@@ -328,6 +328,7 @@ class TestExpandUserInputs:
 
 class TestTranslateValuesToLabels:
 
+    @pytest.mark.asyncio
     def test_translate_values_to_labels_english(self, dynamic_labels):
         # Call the function with our predefined labels
         mode_translations, purpose_translations, replaced_translations = scaffolding.translate_values_to_labels(dynamic_labels)
@@ -360,7 +361,7 @@ class TestTranslateValuesToLabels:
     @pytest.mark.skip(reason="Implementation limited only for english translations")
     def test_translate_values_to_labels_spanish(self, dynamic_labels, language="es"):
         # Call the function with our predefined labels
-        mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels)
+        mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels, language=language)
 
         expected_mode_translations_es = colls.defaultdict(lambda: 'Other', {
             "gas_car":"Coche de gasolina",
@@ -408,7 +409,11 @@ def inferred_ct():
         "inferred_trip": ["itrip_0", "itrip_1", "itrip_2", "itrip_3", "itrip_4", "itrip_5", "itrip_6"],
         "confidence_threshold": [0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55],
         "inferred_labels": pd.Series([
-            [{'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': 0.99}],
+            [
+                {'labels': {'mode_confirm': 'walk', 'purpose_confirm': 'home'}, 'p': 0.005},
+                {'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': 0.99},
+                {'labels': {'mode_confirm': 'bike', 'purpose_confirm': 'work'}, 'p': 0.005}
+            ],
             [{'labels': {'mode_confirm': 'motorcycle', 'purpose_confirm': 'at_work'}, 'p': 0.9899999407250384}],
             [{'labels': {'mode_confirm': 'motorcycle', 'purpose_confirm': 'work'}, 'p': 0.9899999998030119}],
             [{'labels': {'mode_confirm': 'drove_alone', 'purpose_confirm': ''}, 'p': 0.99}],
@@ -419,6 +424,14 @@ def inferred_ct():
     })
 
 class TestExpandInferredLabels:
+
+    @pytest.mark.parametrize("probability, retained", [(0.54, False), (0.55, False), (0.56, True)])
+    def test_expand_inferredlabels_confidence_threshold(self, inferred_ct, probability, retained):
+        inferred_ct.at[0, 'inferred_labels'] = [
+            {'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': probability}
+        ]
+        expanded_ct = scaffolding.expand_inferredlabels(inferred_ct)
+        assert (0 in expanded_ct.index) == retained
 
     def test_expand_inferredlabels(self, inferred_ct):
         expanded_ct = scaffolding.expand_inferredlabels(inferred_ct)
