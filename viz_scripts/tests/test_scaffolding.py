@@ -1,3 +1,5 @@
+import emission.core.wrapper.localdate as ecwl
+import emission.storage.timeseries.tcquery as esttc
 import importlib
 import pandas as pd
 import numpy as np
@@ -7,8 +9,6 @@ import matplotlib.pyplot as plt
 
 # Dynamically import saved-notebooks.plots
 scaffolding = importlib.import_module('saved-notebooks.scaffolding')
-ecwl = importlib.import_module('emission.core.wrapper.localdate')
-esttc = importlib.import_module('emission.storage.timeseries.tcquery')
 
 class TestGetTimeQuery:
 
@@ -366,19 +366,22 @@ class TestTranslateValuesToLabels:
         expected_mode_translations_es = colls.defaultdict(lambda: 'Other', {
             "gas_car":"Coche de gasolina",
             "motorcycle":"Motocicleta",
-            "walk": "Caminando"
+            "walk": "Caminando",
+            "other": "Other"
         })
 
         expected_purpose_translations_es = colls.defaultdict(lambda: 'Other', {
             "home":"Casa",
             "shopping":"Compras",
-            "meal":"Comida"
+            "meal":"Comida",
+            "other": "Other"
         })
 
         expected_result_replaced_translations_es = colls.defaultdict(lambda: 'Other', {
             "no_travel":"No viajar",
             "bike":"Bicicleta",
-            "taxi": "Taxi"
+            "taxi": "Taxi",
+            "other": "Other"
         })
         assert mode_translations_es == expected_mode_translations_es
         assert purpose_translations_es == expected_purpose_translations_es
