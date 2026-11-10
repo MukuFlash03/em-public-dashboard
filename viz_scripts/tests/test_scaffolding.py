@@ -396,7 +396,11 @@ def inferred_ct():
         "inferred_trip": ["itrip_0", "itrip_1", "itrip_2", "itrip_3", "itrip_4", "itrip_5", "itrip_6"],
         "confidence_threshold": [0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55],
         "inferred_labels": pd.Series([
-            [{'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': 0.99}],
+            [
+                {'labels': {'mode_confirm': 'walk', 'purpose_confirm': 'home'}, 'p': 0.005},
+                {'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': 0.99},
+                {'labels': {'mode_confirm': 'bike', 'purpose_confirm': 'work'}, 'p': 0.005}
+            ],
             [{'labels': {'mode_confirm': 'motorcycle', 'purpose_confirm': 'at_work'}, 'p': 0.9899999407250384}],
             [{'labels': {'mode_confirm': 'motorcycle', 'purpose_confirm': 'work'}, 'p': 0.9899999998030119}],
             [{'labels': {'mode_confirm': 'drove_alone', 'purpose_confirm': ''}, 'p': 0.99}],
@@ -405,6 +409,15 @@ def inferred_ct():
             []
         ])
     })
+
+@pytest.mark.parametrize("probability, retained", [(0.54, False), (0.55, False), (0.56, True)])
+def test_expand_inferredlabels_confidence_threshold(inferred_ct, probability, retained):
+    inferred_ct.at[0, 'inferred_labels'] = [
+        {'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': probability}
+    ]
+    expanded_ct = scaffolding.expand_inferredlabels(inferred_ct)
+    assert (0 in expanded_ct.index) == retained
+
 
 def test_expand_inferredlabels(inferred_ct):
     expanded_ct = scaffolding.expand_inferredlabels(inferred_ct)
