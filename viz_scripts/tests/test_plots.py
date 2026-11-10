@@ -122,6 +122,11 @@ def sample_alt_text():
                     AIR_OR_HSR is 32(0.2%).
             '''
 
+@pytest.fixture(autouse=True)
+def isolated_save_dir(tmp_path, monkeypatch):
+    monkeypatch.setattr(plots, "SAVE_DIR", f"{tmp_path}/")
+
+
 class BaseAltTextTest:
     def setup_method(self):
         pathlib.Path(plots.SAVE_DIR).mkdir(exist_ok=True)
