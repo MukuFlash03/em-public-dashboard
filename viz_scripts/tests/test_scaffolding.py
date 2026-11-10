@@ -143,8 +143,8 @@ def test_mapping_color_surveys():
 
 def test_mapping_color_surveys_empty():
     # Test with an empty dictionary
-    with pytest.raises(Exception):
-        mapping_color_surveys({})
+    with pytest.raises(UnboundLocalError):
+        scaffolding.mapping_color_surveys({})
 
 @pytest.fixture
 def before_df():
@@ -201,11 +201,11 @@ def test_get_quality_text_sensed_include_test_users(sensed_df):
     assert result == "Based on 8 trips from 5 testers and participants"
 
 def test_get_quality_text_numerator(sensed_df):
-    result = scaffolding.get_quality_text_sensed(sensed_df)
+    result = scaffolding.get_quality_text_numerator(sensed_df)
     assert result == "Based on 8 trips from 5 users"
 
 def test_get_quality_text_numerator_include_test_users(sensed_df):
-    result = scaffolding.get_quality_text_sensed(sensed_df, include_test_users=True)
+    result = scaffolding.get_quality_text_numerator(sensed_df, include_test_users=True)
     assert result == "Based on 8 trips from 5 testers and participants"
 
 def test_get_file_suffix():
@@ -312,6 +312,7 @@ def test_expand_userinputs(labeled_ct):
     assert expanded_ct['mode_confirm'].fillna('NaN').tolist() == ['own_car', 'bus', 'NaN', 'own_car', 'car', 'bike', 'bike']
 
 # Testing with just dynamic_labels since PR#164 Unify calls to read json resource from e-mission-common in generate_plots.py would make sure we have labels passed into this file, instead of fetching the label-options.json file here
+@pytest.mark.asyncio
 def test_translate_values_to_labels_english(dynamic_labels):
     # Call the function with our predefined labels
     mode_translations, purpose_translations, replaced_translations = scaffolding.translate_values_to_labels(dynamic_labels)
@@ -344,24 +345,27 @@ def test_translate_values_to_labels_english(dynamic_labels):
 @pytest.mark.skip(reason="Implementation limited only for english translations")
 def test_translate_values_to_labels_spanish(dynamic_labels, language="es"):
     # Call the function with our predefined labels
-    mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels)
+    mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels, language=language)
 
     expected_mode_translations_es = colls.defaultdict(lambda: 'Other', {
         "gas_car":"Coche de gasolina",
         "motorcycle":"Motocicleta",
-        "walk": "Caminando"
+        "walk": "Caminando",
+        "other": "Other"
     })
 
     expected_purpose_translations_es = colls.defaultdict(lambda: 'Other', {
         "home":"Casa",
         "shopping":"Compras",
-        "meal":"Comida"
+        "meal":"Comida",
+        "other": "Other"
     })
 
     expected_result_replaced_translations_es = colls.defaultdict(lambda: 'Other', {
         "no_travel":"No viajar",
         "bike":"Bicicleta",
-        "taxi": "Taxi"
+        "taxi": "Taxi",
+        "other": "Other"
     })
     assert mode_translations_es == expected_mode_translations_es
     assert purpose_translations_es == expected_purpose_translations_es
