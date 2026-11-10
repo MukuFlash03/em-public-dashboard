@@ -143,8 +143,8 @@ def test_mapping_color_surveys():
 
 def test_mapping_color_surveys_empty():
     # Test with an empty dictionary
-    with pytest.raises(Exception):
-        mapping_color_surveys({})
+    with pytest.raises(UnboundLocalError):
+        scaffolding.mapping_color_surveys({})
 
 @pytest.fixture
 def before_df():
@@ -201,11 +201,11 @@ def test_get_quality_text_sensed_include_test_users(sensed_df):
     assert result == "Based on 8 trips from 5 testers and participants"
 
 def test_get_quality_text_numerator(sensed_df):
-    result = scaffolding.get_quality_text_sensed(sensed_df)
+    result = scaffolding.get_quality_text_numerator(sensed_df)
     assert result == "Based on 8 trips from 5 users"
 
 def test_get_quality_text_numerator_include_test_users(sensed_df):
-    result = scaffolding.get_quality_text_sensed(sensed_df, include_test_users=True)
+    result = scaffolding.get_quality_text_numerator(sensed_df, include_test_users=True)
     assert result == "Based on 8 trips from 5 testers and participants"
 
 def test_get_file_suffix():
@@ -313,26 +313,29 @@ def test_expand_userinputs(labeled_ct):
 
 # Testing with just dynamic_labels since PR#164 Unify calls to read json resource from e-mission-common in generate_plots.py would make sure we have labels passed into this file, instead of fetching the label-options.json file here
 @pytest.mark.asyncio
-async def test_translate_values_to_labels_english(dynamic_labels):
+def test_translate_values_to_labels_english(dynamic_labels):
     # Call the function with our predefined labels
-    mode_translations, purpose_translations, replaced_translations = await scaffolding.translate_values_to_labels(dynamic_labels)
+    mode_translations, purpose_translations, replaced_translations = scaffolding.translate_values_to_labels(dynamic_labels)
 
     expected_mode_translations = colls.defaultdict(lambda: 'Other', {
         "gas_car": "Car",
         "motorcycle": "Motorcycle",
-        "walk": "Walk"
+        "walk": "Walk",
+        "other": "Other"
     })
 
     expected_purpose_translations = colls.defaultdict(lambda: 'Other', {
         "home": "Home",
         "shopping": "Shopping",
-        "meal": "Meal"
+        "meal": "Meal",
+        "other": "Other"
     })
 
     expected_replaced_translations = colls.defaultdict(lambda: 'Other', {
         "no_travel": "No Travel",
         "bike": "Bicycle",
-        "taxi": "Taxi"
+        "taxi": "Taxi",
+        "other": "Other"
     })
     assert mode_translations == expected_mode_translations
     assert purpose_translations == expected_purpose_translations
@@ -340,42 +343,38 @@ async def test_translate_values_to_labels_english(dynamic_labels):
 
 # TODO:: Implement language specific changes in mapping_translations
 @pytest.mark.skip(reason="Implementation limited only for english translations")
-@pytest.mark.asyncio
-async def test_translate_values_to_labels_spanish(dynamic_labels, language="es"):
+def test_translate_values_to_labels_spanish(dynamic_labels, language="es"):
     # Call the function with our predefined labels
-    mode_translations_es, purpose_translations_es, replaced_translations_es = await scaffolding.translate_values_to_labels(dynamic_labels)
+    mode_translations_es, purpose_translations_es, replaced_translations_es = scaffolding.translate_values_to_labels(dynamic_labels, language=language)
 
     expected_mode_translations_es = colls.defaultdict(lambda: 'Other', {
         "gas_car":"Coche de gasolina",
         "motorcycle":"Motocicleta",
-        "walk": "Caminando"
+        "walk": "Caminando",
+        "other": "Other"
     })
 
     expected_purpose_translations_es = colls.defaultdict(lambda: 'Other', {
         "home":"Casa",
         "shopping":"Compras",
-        "meal":"Comida"
+        "meal":"Comida",
+        "other": "Other"
     })
 
-    expected_replaced_translations_es = colls.defaultdict(lambda: 'Other', {
+    expected_result_replaced_translations_es = colls.defaultdict(lambda: 'Other', {
         "no_travel":"No viajar",
         "bike":"Bicicleta",
-        "taxi": "Taxi"
+        "taxi": "Taxi",
+        "other": "Other"
     })
     assert mode_translations_es == expected_mode_translations_es
     assert purpose_translations_es == expected_purpose_translations_es
     assert replaced_translations_es == expected_result_replaced_translations_es
 
-@pytest.mark.asyncio
-async def test_translate_values_to_labels_empty_input():
+def test_translate_values_to_labels_empty_input():
     # Test with empty input
-    mode_translations, purpose_translations, replaced_translations = await scaffolding.translate_values_to_labels([])
-
-    # Verify that the function can handle empty input
-    # The exact behavior depends on how your function handles this
-    assert isinstance(mode_translations, dict)
-    assert isinstance(purpose_translations, dict)
-    assert isinstance(replaced_translations, dict)
+    with pytest.raises(AttributeError):
+        mode_translations, purpose_translations, replaced_translations = scaffolding.translate_values_to_labels([])
 
 @pytest.fixture
 def inferred_ct():
@@ -397,7 +396,11 @@ def inferred_ct():
         "inferred_trip": ["itrip_0", "itrip_1", "itrip_2", "itrip_3", "itrip_4", "itrip_5", "itrip_6"],
         "confidence_threshold": [0.55, 0.55, 0.55, 0.55, 0.55, 0.55, 0.55],
         "inferred_labels": pd.Series([
-            [{'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': 0.99}],
+            [
+                {'labels': {'mode_confirm': 'walk', 'purpose_confirm': 'home'}, 'p': 0.005},
+                {'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': 0.99},
+                {'labels': {'mode_confirm': 'bike', 'purpose_confirm': 'work'}, 'p': 0.005}
+            ],
             [{'labels': {'mode_confirm': 'motorcycle', 'purpose_confirm': 'at_work'}, 'p': 0.9899999407250384}],
             [{'labels': {'mode_confirm': 'motorcycle', 'purpose_confirm': 'work'}, 'p': 0.9899999998030119}],
             [{'labels': {'mode_confirm': 'drove_alone', 'purpose_confirm': ''}, 'p': 0.99}],
@@ -406,6 +409,15 @@ def inferred_ct():
             []
         ])
     })
+
+@pytest.mark.parametrize("probability, retained", [(0.54, False), (0.55, False), (0.56, True)])
+def test_expand_inferredlabels_confidence_threshold(inferred_ct, probability, retained):
+    inferred_ct.at[0, 'inferred_labels'] = [
+        {'labels': {'mode_confirm': 'shared_ride', 'purpose_confirm': 'school'}, 'p': probability}
+    ]
+    expanded_ct = scaffolding.expand_inferredlabels(inferred_ct)
+    assert (0 in expanded_ct.index) == retained
+
 
 def test_expand_inferredlabels(inferred_ct):
     expanded_ct = scaffolding.expand_inferredlabels(inferred_ct)
