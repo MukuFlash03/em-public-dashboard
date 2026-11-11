@@ -14,9 +14,6 @@ services:
       - WEB_SERVER_HOST=0.0.0.0
       - CRON_MODE=
       - STUDY_CONFIG=stage-program
-    ports:
-      # ipynb in numbers
-      - "47962:47962"
     networks:
       - emission
     volumes:
