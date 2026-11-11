@@ -9,7 +9,17 @@ from matplotlib.patches import Patch
 
 sns.set_style("whitegrid")
 sns.set()
-get_ipython().run_line_magic('matplotlib', 'inline')
+
+try:
+    # Import the function
+    from IPython import get_ipython
+    # Check if running in an IPython environment (like Jupyter Notebook)
+    if get_ipython() is not None:
+        get_ipython().run_line_magic('matplotlib', 'inline')
+except ImportError:
+    # Handle the case where IPython is not installed
+    # We are running in regular Python (likely pytest), not Jupyter/IPython
+    pass
 
 # Module for pretty-printing outputs (e.g. head) to help users
 # understand what is going on
@@ -63,16 +73,16 @@ def merge_small_entries(labels, values):
     else: #assuming labeled or inferred
         # This part if a bit tricky
         # We could have already had a non-zero other, and it could be small or large
-        if "Other" not in v2l_df.index:
+        if "other" not in v2l_df.index:
             # zero other will end up with misc_count
             if misc_count.vals > 0:
-                v2l_df.loc["Other"] = misc_count
-        elif "Other" in small_chunk.index:
+                v2l_df.loc["other"] = misc_count
+        elif "other" in small_chunk.index:
             # non-zero small other will already be in misc_count
-            v2l_df.loc["Other"] = misc_count
+            v2l_df.loc["other"] = misc_count
         else:
             # non-zero large other, will not already be in misc_count
-            v2l_df.loc["Other"] = v2l_df.loc["Other"] + misc_count
+            v2l_df.loc["other"] = v2l_df.loc["other"] + misc_count
     
     disp.display(v2l_df)
 
@@ -111,7 +121,7 @@ def plot_and_text_error(e, ax, file_name):
     return alt_text, alt_html
 
 # Creates/ Appends single bar to the 100% Stacked Bar Chart
-def plot_and_text_stacked_bar_chart(df, agg_fcn, bar_label, ax, text_result, colors, debug_df):
+def plot_and_text_stacked_bar_chart(df, agg_fcn, bar_label, ax, text_result, colors, debug_df, values_to_translations={}):
     """ Inputs:
     df = Data frame corresponding to the bar in a stacked bar chart. It is
         expected to have three columns, which represent the 'label', 'value'
@@ -145,7 +155,7 @@ def plot_and_text_stacked_bar_chart(df, agg_fcn, bar_label, ax, text_result, col
                 mode_prop = long['Proportion']
                 mode_count = long['Value']
                 vals_str = [f'{y:.1f} %\n({x:.0f})' if y > 4 else '' for x, y in zip(mode_count, mode_prop)]
-                bar = ax.barh(y=bar_label, width=mode_prop, height=bar_height, left=bar_width, label=label, color=colors[label])
+                bar = ax.barh(y=bar_label, width=mode_prop, height=bar_height, left=bar_width, label=values_to_translations.get(label, label), color=colors[label])
                 ax.bar_label(bar, label_type='center', labels=vals_str, rotation=90, fontsize=16)
                 bar_width = [total + val for total, val in zip(bar_width, mode_prop)]
             else:
@@ -158,9 +168,10 @@ def plot_and_text_stacked_bar_chart(df, agg_fcn, bar_label, ax, text_result, col
             
         # Fix for the error: RuntimeError("Unknown return type"), adding the below line to address as mentioned here https://github.com/matplotlib/matplotlib/issues/25625/
         ax.set_xlim(right=ax.get_xlim()[1] + 1.0, auto=True)
-        text_result[0], text_result[1] = store_alt_text_and_html_stacked_bar_chart(df_all_entries, bar_label)
+        text_result[0], text_result[1] = store_alt_text_and_html_stacked_bar_chart(df_all_entries, bar_label, values_to_translations)
         print("After populating, %s" % text_result)
     except Exception as e:
+        print(e)
         # tb.print_exception(type(e), e, e.__traceback__)
         #ax.set_title("Insufficient data", loc="center")
         ax.set_ylabel(bar_label)
@@ -217,11 +228,11 @@ def set_title_and_save(fig, text_results, plot_title, file_name):
     fig.savefig(SAVE_DIR + file_name + ".png", bbox_inches='tight')
     plt.show()
 
-def energy_impact(x,y,color,plot_title,file_name):
+def energy_impact(x,y,color,plot_title,file_name, values_to_translations={}):
     color = color.map({True: 'green', False: 'red'})
     objects = ('Energy Savings', 'Energy Loss')
     
-    y_labels = y
+    y_labels = y.map(lambda value: values_to_translations.get(value, value))
     plt.figure(figsize=(15, 8))
     width = 0.8
     ax = x.plot(kind='barh',width=width, color=color)
@@ -263,18 +274,25 @@ def energy_impact(x,y,color,plot_title,file_name):
     plt.legend(labels=objects, handles=patches, loc='upper right', borderaxespad=0, fontsize=15, frameon=True)
     plt.savefig(SAVE_DIR+file_name+".png", bbox_inches='tight')
 
-def barplot_mode(data,x,y,plot_title, labels, file_name):
+def barplot_mode(data,x,y,x_label,plot_title, labels, file_name, values_to_translations={}):
     colours = dict(zip(labels, plt.cm.tab20.colors[:len(labels)]))
     sns.set(font_scale=1.5)
     f = plt.subplots(figsize=(15, 6))
     sns.set(style='whitegrid')
     ax = sns.barplot(x=x, y=y, palette=colours,data=data, ci=None)
-    plt.xlabel(x, fontsize=23)
+    plt.xlabel(x_label, fontsize=23)
     plt.ylabel(y, fontsize=23)
     plt.title(plot_title, fontsize=25)
+
+    if values_to_translations:
+        x_ticks = ax.get_xticklabels()
+        translated_labels = [values_to_translations.get(label.get_text(), label.get_text()) for label in x_ticks]
+        ax.set_xticklabels(translated_labels)
+
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+
     # y should be based on the max range + the biggest label ("Gas Car, with others")
     plt.text(0,-(data[y].max()/8 + 3.3),f"Last updated {arrow.get()}", fontsize=10)
-    plt.setp(plt.gca().get_xticklabels(), rotation=45, horizontalalignment='right')
     plt.savefig(SAVE_DIR+file_name+".png", bbox_inches='tight')
 
 def barplot_mode2(data,x,y,y2,plot_title,file_name):
@@ -334,11 +352,11 @@ def barplot_day(data,x,y,plot_title,file_name):
     plt.text(0,-(data[y].max())/8,f"Last updated {arrow.get()}", fontsize=10)
     plt.savefig(SAVE_DIR+file_name+".png", bbox_inches='tight')
 
-def CO2_impact(x,y,color,plot_title, xLabel, yLabel, file_name):
+def CO2_impact(x,y,color,plot_title, xLabel, yLabel, file_name, values_to_translations={}):
     color = color.map({True: 'green', False: 'red'})
     objects = ('CO2 Reduction', 'CO2 Increase')
 
-    y_labels = y
+    y_labels = y.map(lambda value: values_to_translations.get(value, value))
     plt.figure(figsize=(15, 8))
     width = 0.8
     ax = x.plot(kind='barh',width=width, color=color)
@@ -387,12 +405,16 @@ def timeseries_plot(x,y,plot_title,ylab,file_name):
     plt.subplots_adjust(bottom=0.25)
     ax.figure.savefig(SAVE_DIR+file_name+".png", bbox_inches='tight')
 
-def timeseries_multi_plot(data,x,y,hue,plot_title,ylab,legend_title,file_name):
+def timeseries_multi_plot(data,x,y,hue,plot_title,ylab,legend_title,file_name, values_to_translations={}):
     fig, ax = plt.subplots(figsize=(16,4))
     sns.lineplot(ax=ax, data=data, x=x, y=y, hue=hue).set(title=plot_title, xlabel='Date', ylabel=ylab)
     plt.xticks(rotation=45)
     plt.subplots_adjust(bottom=0.25)
-    plt.legend(bbox_to_anchor=(1.02, 1), loc='best', borderaxespad=0, title=legend_title)
+    #  Get the current legend labels
+    handles, labels = ax.get_legend_handles_labels()
+    if values_to_translations:
+        labels = [values_to_translations.get(label, label) for label in labels]
+    ax.legend(handles,labels, bbox_to_anchor=[1.02, 1], loc='best', borderaxespad=0, title=legend_title)
     ax.figure.savefig(SAVE_DIR+file_name+".png", bbox_inches='tight')
 
 def access_alt_text(alt_text, chart_name):
@@ -456,7 +478,7 @@ def access_alt_html(html_content, chart_name):
     return html_content
 
 # Appends bar information into into the alt_html
-def store_alt_text_and_html_stacked_bar_chart(df, var_name):
+def store_alt_text_and_html_stacked_bar_chart(df, var_name, values_to_translations):
     """ Inputs:
     df = dataframe combining columns as Trip Type, Label, Value, Proportion
     chart_name = name of the chart
@@ -464,12 +486,12 @@ def store_alt_text_and_html_stacked_bar_chart(df, var_name):
     # Generate alt text file
     alt_text = f"\nStacked Bar of: {var_name}\n"
     for i in range(len(df)):
-        alt_text += f"{df['Label'].iloc[i]} is {df['Value'].iloc[i]}({df['Proportion'].iloc[i]}%).\n"
+        alt_text += f"{values_to_translations.get(df['Label'].iloc[i], df['Label'].iloc[i])} is {df['Value'].iloc[i]}({df['Proportion'].iloc[i]}%).\n"
 
     # Generate html table
     alt_html = "\n"
     for i in range(len(df)):
-        alt_html += f"<tr><td>{df['Label'].iloc[i]}</td><td>{df['Value'].iloc[i]}</td><td>{df['Proportion'].iloc[i]}%</td></tr>"
+        alt_html += f"<tr><td>{values_to_translations.get(df['Label'].iloc[i], df['Label'].iloc[i])}</td><td>{df['Value'].iloc[i]}</td><td>{df['Proportion'].iloc[i]}%</td></tr>"
     html_content = f"""
         <p>Trip Type: {var_name}</p>
         <table border="1" style="background-color: white;">
