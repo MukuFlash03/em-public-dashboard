@@ -4,7 +4,7 @@ services:
     image: em-pub-dash-dev/frontend
     build:
         context: frontend
-        dockerfile: docker/Dockerfile.dev
+        dockerfile: Dockerfile.dev
     depends_on:
       - db
     ports:
@@ -19,7 +19,7 @@ services:
     image: em-pub-dash-dev/viz-scripts
     build:
       context: viz_scripts
-      dockerfile: docker/Dockerfile.dev
+      dockerfile: Dockerfile.dev
       args:
         SERVER_IMAGE_TAG: ${SERVER_IMAGE_TAG}
     depends_on:
@@ -31,14 +31,14 @@ services:
       - STUDY_CONFIG=stage-program
     ports:
       # ipynb in numbers
-      - "47962:8888"
+      - "47962:47962"
     networks:
       - emission
     volumes:
       - ./viz_scripts:/usr/src/app/saved-notebooks
       - ./plots:/plots
   db:
-    image: mongo:4.4.0
+    image: mongo:8.0.4
     volumes:
       - mongo-data:/data/db
     networks:
