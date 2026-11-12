@@ -28,13 +28,13 @@ services:
       - STUDY_CONFIG=stage-program
     ports:
       # ipynb in numbers
-      - "47962:8888"
+      - "47962:47962"
     networks:
       - emission
     volumes:
       - ./plots:/plots
   db:
-    image: mongo:4.4.0
+    image: mongo:8.0.4
     volumes:
       - mongo-data:/data/db
     networks:

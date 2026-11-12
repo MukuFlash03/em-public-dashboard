@@ -1,4 +1,4 @@
-FROM node:21.7.2-alpine
+FROM node:26.13.0-alpine3.24
 LABEL org.opencontainers.image.source=https://github.com/e-mission/em-public-dashboard
 
 VOLUME /public/plots
@@ -6,7 +6,11 @@ VOLUME /public/plots
 RUN mkdir -p /public
 WORKDIR /public
 
+RUN npm install -g npm@latest
 RUN npm i -g http-server
+
+# Make sure that all vulnerabilities are fixed
+RUN npm update -g
 
 COPY client /public/client
 COPY *.html /public/
