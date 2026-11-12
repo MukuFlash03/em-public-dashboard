@@ -1,6 +1,6 @@
 # python 3
 ARG SERVER_IMAGE_TAG
-FROM shankari/e-mission-server:master_${SERVER_IMAGE_TAG}
+FROM shankari/e-mission-server:${SERVER_IMAGE_TAG}
 
 VOLUME /plots
 
